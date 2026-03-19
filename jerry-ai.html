@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>jerry.ai — Editor-in-Chief</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Source+Serif+4:ital,opsz,wght@0,8..60,300;0,8..60,400;1,8..60,300&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --ink: #1a1a18;
+    --ink-muted: #4a4a45;
+    --ink-faint: #8a8a82;
+    --paper: #f7f5f0;
+    --paper-warm: #eeece6;
+    --paper-border: #d4d0c4;
+    --rule: #1a1a18;
+    --accent: #b5110a;
+    --column-max: 680px;
+    --font-display: 'Playfair Display', Georgia, serif;
+    --font-body: 'Source Serif 4', Georgia, serif;
+  }
+
+  html, body {
+    height: 100%;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--font-body);
+    font-size: 16px;
+    line-height: 1.6;
+  }
+
+  /* ── masthead ── */
+  .masthead {
+    border-bottom: 3px double var(--rule);
+    padding: 1.5rem 2rem 1rem;
+    text-align: center;
+    background: var(--paper);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .masthead-kicker {
+    font-family: var(--font-body);
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+    margin-bottom: 4px;
+  }
+  .masthead-title {
+    font-family: var(--font-display);
+    font-size: clamp(2rem, 6vw, 3.2rem);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1;
+    color: var(--ink);
+  }
+  .masthead-title em {
+    font-style: italic;
+    color: var(--accent);
+  }
+  .masthead-rule {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-top: 0.6rem;
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+    font-family: var(--font-body);
+  }
+  .masthead-rule::before,
+  .masthead-rule::after {
+    content: '';
+    flex: 1;
+    height: 0.5px;
+    background: var(--ink-muted);
+  }
+
+  /* ── layout ── */
+  .layout {
+    display: flex;
+    height: calc(100vh - 110px);
+    max-width: 960px;
+    margin: 0 auto;
+  }
+
+  /* ── sidebar ── */
+  .sidebar {
+    width: 220px;
+    flex-shrink: 0;
+    border-right: 0.5px solid var(--paper-border);
+    padding: 2rem 1.25rem;
+    overflow-y: auto;
+  }
+  .sidebar-label {
+    font-size: 9px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    font-family: var(--font-body);
+    margin-bottom: 0.75rem;
+  }
+  .jerry-portrait {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: var(--paper-warm);
+    border: 1.5px solid var(--paper-border);
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-display);
+    font-size: 2rem;
+    color: var(--ink-muted);
+    font-style: italic;
+  }
+  .jerry-name {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 1rem;
+    line-height: 1.2;
+    margin-bottom: 2px;
+  }
+  .jerry-title {
+    font-size: 12px;
+    color: var(--ink-muted);
+    font-style: italic;
+    margin-bottom: 1rem;
+    line-height: 1.4;
+  }
+  .sidebar-divider {
+    height: 0.5px;
+    background: var(--paper-border);
+    margin: 1rem 0;
+  }
+  .sidebar-bio {
+    font-size: 12px;
+    color: var(--ink-muted);
+    line-height: 1.6;
+    font-style: italic;
+  }
+
+  /* ── chat column ── */
+  .chat-column {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 2rem 2rem 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  /* ── message bubbles ── */
+  .message {
+    display: flex;
+    flex-direction: column;
+    max-width: 520px;
+  }
+  .message.user {
+    align-self: flex-end;
+    align-items: flex-end;
+  }
+  .message.jerry {
+    align-self: flex-start;
+    align-items: flex-start;
+  }
+
+  .message-label {
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin-bottom: 4px;
+    font-family: var(--font-body);
+  }
+
+  .message-bubble {
+    padding: 0.75rem 1rem;
+    font-size: 15px;
+    line-height: 1.65;
+    font-family: var(--font-body);
+  }
+
+  .message.user .message-bubble {
+    background: var(--ink);
+    color: var(--paper);
+    border-radius: 2px 12px 12px 12px;
+  }
+
+  .message.jerry .message-bubble {
+    background: var(--paper-warm);
+    border: 0.5px solid var(--paper-border);
+    border-left: 3px solid var(--accent);
+    border-radius: 0 12px 12px 12px;
+    color: var(--ink);
+  }
+
+  /* ── welcome state ── */
+  .welcome {
+    margin: auto;
+    text-align: center;
+    padding: 2rem;
+    max-width: 400px;
+  }
+  .welcome-headline {
+    font-family: var(--font-display);
+    font-size: 1.4rem;
+    font-style: italic;
+    color: var(--ink-muted);
+    line-height: 1.4;
+    margin-bottom: 0.5rem;
+  }
+  .welcome-sub {
+    font-size: 13px;
+    color: var(--ink-faint);
+    line-height: 1.6;
+  }
+
+  /* ── typing indicator ── */
+  .typing-indicator {
+    display: none;
+    align-self: flex-start;
+    align-items: flex-start;
+    flex-direction: column;
+    max-width: 520px;
+  }
+  .typing-indicator.visible { display: flex; }
+  .typing-dots {
+    background: var(--paper-warm);
+    border: 0.5px solid var(--paper-border);
+    border-left: 3px solid var(--accent);
+    border-radius: 0 12px 12px 12px;
+    padding: 0.75rem 1.1rem;
+    display: flex;
+    gap: 5px;
+    align-items: center;
+  }
+  .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--ink-faint);
+    animation: blink 1.2s ease-in-out infinite;
+  }
+  .dot:nth-child(2) { animation-delay: 0.2s; }
+  .dot:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes blink {
+    0%, 80%, 100% { opacity: 0.3; transform: scale(0.85); }
+    40% { opacity: 1; transform: scale(1); }
+  }
+
+  /* ── input bar ── */
+  .input-bar {
+    border-top: 0.5px solid var(--paper-border);
+    padding: 1rem 2rem 1.25rem;
+    background: var(--paper);
+  }
+  .input-row {
+    display: flex;
+    gap: 10px;
+    align-items: flex-end;
+    border: 1px solid var(--paper-border);
+    border-radius: 4px;
+    padding: 8px 8px 8px 14px;
+    background: #fff;
+    transition: border-color 0.15s;
+  }
+  .input-row:focus-within {
+    border-color: var(--ink);
+  }
+  #user-input {
+    flex: 1;
+    border: none;
+    outline: none;
+    background: transparent;
+    font-family: var(--font-body);
+    font-size: 15px;
+    color: var(--ink);
+    resize: none;
+    line-height: 1.5;
+    max-height: 120px;
+    min-height: 24px;
+  }
+  #user-input::placeholder { color: var(--ink-faint); }
+
+  #send-btn {
+    flex-shrink: 0;
+    width: 34px;
+    height: 34px;
+    border-radius: 3px;
+    border: none;
+    background: var(--ink);
+    color: var(--paper);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.15s, transform 0.1s;
+  }
+  #send-btn:hover { background: var(--accent); }
+  #send-btn:active { transform: scale(0.96); }
+  #send-btn:disabled { background: var(--paper-border); cursor: not-allowed; }
+
+  .input-hint {
+    font-size: 11px;
+    color: var(--ink-faint);
+    margin-top: 6px;
+    text-align: center;
+    font-style: italic;
+  }
+
+  /* ── scrollbar ── */
+  .messages::-webkit-scrollbar { width: 4px; }
+  .messages::-webkit-scrollbar-track { background: transparent; }
+  .messages::-webkit-scrollbar-thumb { background: var(--paper-border); border-radius: 2px; }
+
+  @media (max-width: 600px) {
+    .sidebar { display: none; }
+    .masthead { padding: 1rem; }
+    .messages { padding: 1.25rem 1rem 0.75rem; }
+    .input-bar { padding: 0.75rem 1rem 1rem; }
+  }
+</style>
+</head>
+<body>
+
+<header class="masthead">
+  <div class="masthead-kicker">The Daily Princetonian — Ask the Editor</div>
+  <div class="masthead-title">jerry<em>.ai</em></div>
+  <div class="masthead-rule">Est. 1876 &bull; Princeton, New Jersey &bull; Independent Student Newspaper</div>
+</header>
+
+<div class="layout">
+
+  <aside class="sidebar">
+    <div class="sidebar-label">Editor-in-Chief</div>
+    <div class="jerry-portrait">J</div>
+    <div class="jerry-name">Jerry Zhu</div>
+    <div class="jerry-title">Editor-in-Chief,<br>The Daily Princetonian</div>
+    <div class="sidebar-divider"></div>
+    <div class="sidebar-bio">
+      "A newspaper is only as good as its standards. I hold them to the letter."
+    </div>
+    <div class="sidebar-divider"></div>
+    <div class="sidebar-bio">
+      Ask Jerry about the Prince, student journalism, campus life, or anything else on your mind. He will probably correct your grammar.
+    </div>
+  </aside>
+
+  <main class="chat-column">
+    <div class="messages" id="messages">
+      <div class="welcome" id="welcome">
+        <div class="welcome-headline">"Say what you mean.<br>Mean what you say."</div>
+        <div class="welcome-sub">You are now speaking with Jerry Zhu, Editor-in-Chief of The Daily Princetonian. He is busy. Make it count.</div>
+      </div>
+      <div class="typing-indicator" id="typing" aria-label="Jerry is thinking">
+        <div class="message-label">Jerry Zhu</div>
+        <div class="typing-dots">
+          <div class="dot"></div>
+          <div class="dot"></div>
+          <div class="dot"></div>
+        </div>
+      </div>
+    </div>
+    <div class="input-bar">
+      <div class="input-row">
+        <textarea id="user-input" placeholder="Ask Jerry something…" rows="1" maxlength="500"></textarea>
+        <button id="send-btn" title="Send" aria-label="Send message">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <path d="M2 14L14 8L2 2V6.5L10 8L2 9.5V14Z" fill="currentColor"/>
+          </svg>
+        </button>
+      </div>
+      <div class="input-hint">Jerry will say what Jerry will say.</div>
+    </div>
+  </main>
+
+</div>
+
+<script>
+// ──────────────────────────────────────────────
+// JERRY'S RESPONSES
+// ──────────────────────────────────────────────
+const JERRY_RESPONSES = [
+  "Oh Epstein!!!",
+  "I need to receive the propaganda right now",
+  "Yay! Let's go fiery Friday night drama again",
+  "I've been a bad boy",
+  "bro's just leaking",
+  "this guy had a hog the whole time?",
+  "what is your sexual orientation?",
+  "If I get sick the 'Prince' dies",
+  "Maybe I should abuse my power",
+  "pull out your phone and play Clash Royale",
+  "Damn... that's aura loss.",
+  "They are woke",
+  "Is it because I'm homophobic? Like, no, he's just weird",
+  "HEEEEEheeehehheehehHHEEEEEEEehehehehHEE 👹",
+  "Wait why does he look so chopped in these photos",
+  "News is struggling",
+  "You're making jokes to the executioner who's going to release the guillotine",
+  "When I was young, I didn't understand the time value of money. My mom would make fun of me and be like HAHA 🤣",
+  "America 250 is no laughing matter",
+  "Me when my piece is bad",
+  "Wait guys I have a hot take... ICE is getting too much hate",
+  "I'm bisexual",
+  "I'm not endorsing terrorism",
+  "Ok, I lowkey killed sue altman",
+  "150th, and last board of the Daily Princetonian. It's been a good run",
+  "Girl... please do your job",
+  "we're gonna stuff ourselves silly on grapes",
+  "A Princeton affiliated terrorist",
+  "We don't respect preferred names",
+  "me when Hayk just slips in",
+  "he's, like, a hot guy",
+  "omg charlie cream",
+];
+
+// ── DOM refs ──
+const messagesEl = document.getElementById('messages');
+const welcomeEl  = document.getElementById('welcome');
+const typingEl   = document.getElementById('typing');
+const inputEl    = document.getElementById('user-input');
+const sendBtn    = document.getElementById('send-btn');
+
+// ── auto-resize textarea ──
+inputEl.addEventListener('input', () => {
+  inputEl.style.height = 'auto';
+  inputEl.style.height = Math.min(inputEl.scrollHeight, 120) + 'px';
+});
+
+// ── send on Enter (Shift+Enter = newline) ──
+inputEl.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    handleSend();
+  }
+});
+sendBtn.addEventListener('click', handleSend);
+
+function addMessage(role, text) {
+  welcomeEl && (welcomeEl.style.display = 'none');
+  const wrapper = document.createElement('div');
+  wrapper.className = `message ${role}`;
+  const label = document.createElement('div');
+  label.className = 'message-label';
+  label.textContent = role === 'user' ? 'You' : 'Jerry Zhu';
+  const bubble = document.createElement('div');
+  bubble.className = 'message-bubble';
+  bubble.textContent = text;
+  wrapper.appendChild(label);
+  wrapper.appendChild(bubble);
+  messagesEl.insertBefore(wrapper, typingEl);
+  messagesEl.scrollTop = messagesEl.scrollHeight;
+}
+
+function setTyping(visible) {
+  typingEl.classList.toggle('visible', visible);
+  messagesEl.scrollTop = messagesEl.scrollHeight;
+}
+
+async function handleSend() {
+  const text = inputEl.value.trim();
+  if (!text || sendBtn.disabled) return;
+
+  addMessage('user', text);
+  inputEl.value = '';
+  inputEl.style.height = 'auto';
+  sendBtn.disabled = true;
+  setTyping(true);
+
+  // Small delay so the typing indicator feels natural
+  await new Promise(r => setTimeout(r, 700 + Math.random() * 600));
+
+  setTyping(false);
+  const response = JERRY_RESPONSES[Math.floor(Math.random() * JERRY_RESPONSES.length)];
+  addMessage('jerry', response);
+  sendBtn.disabled = false;
+  inputEl.focus();
+}
+</script>
+</body>
+</html>
